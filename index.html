@@ -25,13 +25,25 @@
         .then(response => response.json())
         .then(list => {
           const ul = document.getElementById("playlist");
-          list.forEach((video) => {
+          list.forEach((video, index) => {
             const li = document.createElement("li");
+            const playlistItemId = `playlist-item-${index + 1}`;
+            li.setAttribute("id", playlistItemId);
             li.innerHTML = video.name;
             li.addEventListener("click", (event) => {
               loadVideo(video.name);
-            })
+              _playListObservable.emit({
+                type: "select",
+                id: playlistItemId
+              })
+            });
             ul.appendChild(li);
+
+            const playlistObs = playlistObserver({
+              id: playlistItemId,
+              title: video.name
+            });
+            _playListObservable.addObserver(playlistObs);
           });
         });
   }
@@ -50,9 +62,65 @@
 
   function removeExistingPlayerSource() {
     const source = document.querySelector("#player source");
-    if(source) {
+    if (source) {
       const video = document.getElementById("player");
       video.removeChild(source);
+    }
+  }
+
+  const _playListObservable = playListObservable();
+
+  function playListObservable() {
+    const observers = [];
+    return {
+      addObserver: (observer) => {
+        observers.push(observer);
+      },
+      removeObserver: (observer) => {
+        const removeIndex = observers.findIndex((obs) => obs === observer);
+        if (removeIndex >= 0) {
+          observers.splice(removeIndex, 1);
+        }
+      },
+      emit: (event) => {
+        observers.forEach(observer => {
+          observer.emit(event);
+        });
+      }
+    }
+  }
+
+  function playlistObserver(d) {
+    const _data = d;
+    return {
+      emit: (event) => {
+        switch (event.type) {
+          case "select":
+            if(event.id === _data.id) {
+              decoratePlaylistItem(_data);
+            }
+            else {
+              unDecoratePlaylistItem(_data);
+            }
+        }
+      }
+    }
+  }
+
+  function decoratePlaylistItem(data) {
+    let playlistItem = document.querySelector(`li#${data.id}`);
+    if(playlistItem) {
+      playlistItem.removeChild(playlistItem.firstChild);
+      const b = document.createElement("b");
+      b.innerHTML = data.title;
+      playlistItem.appendChild(b);
+    }
+  }
+
+  function unDecoratePlaylistItem(data) {
+    let playlistItem = document.querySelector(`li#${data.id}`);
+    if(playlistItem) {
+      playlistItem.innerHTML = data.title;
     }
   }
 

@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const fs = require("fs");
 const videoDirectory = "/Users/apu/videos/";
+const CHUNK_SIZE = 10 ** 6;
 
 app.get("/", (request, response) => {
   response.sendFile(__dirname + '/index.html', (error) => {
@@ -25,7 +26,6 @@ app.get("/video/:id", (request, response) => {
   const videoFile = fs.statSync(videoFileName);
   if(videoFile.isFile()) {
     const videoSize = videoFile.size;
-    const CHUNK_SIZE = 10 ** 6;
     const start = Number(range.replace(/\D/g, ""));
     const end = Math.min(start + CHUNK_SIZE, videoSize - 1);
     const contentLength = end - start + 1;
