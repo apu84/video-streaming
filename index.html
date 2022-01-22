@@ -2,13 +2,61 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>MyTube</title>
+  <style>
+      #playlist li:hover {
+          cursor: pointer;
+      }
+  </style>
 </head>
 <body>
-  <video id="player" width="50%" controls muted="muted" autoplay="autoplay">
-    <source src="/video" type="video/mp4"/>
-  </video>
+<video id="player" width="74%" controls muted="muted" autoplay="autoplay">
+</video>
+<section>
+  <ul id="playlist">
+
+  </ul>
+</section>
+<script type="application/javascript">
+  function listVideos() {
+    fetch("/list")
+        .then(response => response.json())
+        .then(list => {
+          const ul = document.getElementById("playlist");
+          list.forEach((video) => {
+            const li = document.createElement("li");
+            li.innerHTML = video.name;
+            li.addEventListener("click", (event) => {
+              loadVideo(video.name);
+            })
+            ul.appendChild(li);
+          });
+        });
+  }
+
+  function loadVideo(videoId) {
+    removeExistingPlayerSource();
+    const player = document.getElementById("player");
+    const source = document.createElement("source");
+    source.setAttribute("src", `/video/${videoId}`);
+    source.setAttribute("type", "video/mp4");
+    player.appendChild(source);
+    setTimeout(() => {
+      player.load();
+    });
+  }
+
+  function removeExistingPlayerSource() {
+    const source = document.querySelector("#player source");
+    if(source) {
+      const video = document.getElementById("player");
+      video.removeChild(source);
+    }
+  }
+
+  listVideos();
+</script>
 </body>
 </html>
