@@ -4,8 +4,11 @@ const fileUpload = require("express-fileupload");
 const fs = require("fs");
 const cors = require("cors");
 const bodyParser = require("body-parser");
+const transcode = require("./transcode");
+const rxjs = require("rxjs");
 
 const videoDirectory = "/Users/apu/videos/";
+const uploadDirectory = "/Users/apu/videos/uploads/";
 const CHUNK_SIZE = 10 ** 6;
 
 app.use(fileUpload({
@@ -61,8 +64,14 @@ app.post("/upload", async (request, response) => {
     }
     else {
       const videoFile = request.files.videoFile;
-      videoFile.mv(`/Users/apu/videos/${videoFile.name}`);
+      videoFile.mv(`${uploadDirectory}${videoFile.name}`);
       response.status(200).send("File is uploaded");
+      const observable = transcode(`${videoFile.name}`, `${uploadDirectory}`);
+      observable.subscribe({
+        next(state) {
+          console.log("######" + state + "#####");
+        }
+      });
     }
   } catch (e) {
     console.error(e);
