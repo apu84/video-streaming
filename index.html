@@ -9,17 +9,65 @@
       #playlist li:hover {
           cursor: pointer;
       }
+      .player-container {
+          width: 1250px;
+          height: 700px;
+      }
+      .container {
+          display: flex;
+      }
   </style>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 </head>
 <body>
-<video id="player" width="74%" controls muted="muted" autoplay="autoplay">
-</video>
-<section>
-  <ul id="playlist">
+<div class="container">
+  <div class="player-container">
+    <video id="player" width="100%" controls muted="muted" autoplay="autoplay">
+    </video>
+  </div>
+  <section>
+    <ul id="playlist">
 
-  </ul>
-</section>
+    </ul>
+  </section>
+</div>
+<div class="form">
+  <input type="file" id="videoFile" />
+  <input type="button" value="Upload" onclick="uploadFile()"/>
+  <span class="upload-status"></span>
+</div>
 <script type="application/javascript">
+  function uploadFile() {
+    const videoFile = document.getElementById("videoFile").files[0];
+    const formData = new FormData();
+    formData.append('videoFile', videoFile);
+
+    axios.request({
+      method: "post",
+      url: "/upload",
+      data: formData,
+      onUploadProgress: (p) => {
+        showProgress(uploadPercentage(p));
+      }
+    }).then(data => {
+        showComplete(data);
+    });
+  }
+
+  function showComplete(data) {
+    document.querySelector(".upload-status").innerHTML = `Upload completed`;
+  }
+
+  function uploadPercentage(data) {
+    const totalLength = parseInt(data.total);
+    const loaded = parseInt(data.loaded);
+    return  100 - Math.ceil(((totalLength - loaded) / totalLength) * 100);
+  }
+
+  function showProgress(percentage) {
+    document.querySelector(".upload-status").innerHTML = `${percentage}%`;
+  }
+
   function listVideos() {
     fetch("/list")
         .then(response => response.json())
